@@ -7,7 +7,7 @@ def split_and_save() -> None:
     Splits the data into 80% training and 20% testing sets.
     Saves the splits into the data folder.
     """
-    df = pd.read_csv('data/cleaned_train.csv')
+    df = pd.read_csv('data/preprocessed/preprocessed-train-data.csv')
     X = df.drop('Heart Disease', axis=1)
     y = df['Heart Disease']
     

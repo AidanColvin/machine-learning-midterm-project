@@ -16,7 +16,7 @@ def create_submissions():
         return
 
     print("Loading training data...")
-    train_df = pd.read_csv('data/cleaned_train.csv')
+    train_df = pd.read_csv('data/preprocessed/preprocessed-train-data.csv')
     X_train = train_df.drop(['Heart Disease', 'id'], axis=1, errors='ignore')
     y_train = train_df['Heart Disease']
 
