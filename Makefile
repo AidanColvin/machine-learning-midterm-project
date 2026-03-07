@@ -1,40 +1,14 @@
-# -----------------------------------
-# MACHINE LEARNING PIPELINE COMMANDS
-# -----------------------------------
+.PHONY: run preprocessing
 
-PYTHON = python3
-SRC = src
+PYTHON := python3
+SRC    := src
 
-# Default target
-all: preprocess
+run:
+	@$(MAKE) --no-print-directory $(filter-out $@,$(MAKECMDGOALS))
 
-# ----------------------
-# DATA PREPROCESSING
-# ----------------------
-preprocess:
-	$(PYTHON) $(SRC)/preprocessing.py
+%:
+	@:
 
-# ----------------------
-# LOAD RAW DATA
-# ----------------------
-load:
-	$(PYTHON) $(SRC)/load-raw-training-data.py
-
-# ----------------------
-# CLEAN TEMP FILES
-# ----------------------
-clean:
-	rm -rf __pycache__
-	rm -rf $(SRC)/__pycache__
-	rm -rf data/processed
-
-# ----------------------
-# HELP
-# ----------------------
-help:
-	@echo ""
-	@echo "Available commands:"
-	@echo " make preprocess   -> run preprocessing pipeline"
-	@echo " make load         -> load raw training data"
-	@echo " make clean        -> remove temp files"
-	@echo ""
+preprocessing:
+	@$(PYTHON) $(SRC)/load-raw-training-data.py
+	@$(PYTHON) $(SRC)/preprocessing.py

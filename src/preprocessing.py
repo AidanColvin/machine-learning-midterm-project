@@ -473,3 +473,8 @@ def preprocess(df: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
     save_preprocessed_data(df)
 
     return df, balance_report
+
+
+if __name__ == "__main__":
+    df_clean, balance_report = preprocess(df_raw)
+    print("Preprocessing complete.")

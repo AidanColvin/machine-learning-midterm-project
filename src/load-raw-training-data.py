@@ -60,3 +60,7 @@ def load_train_data() -> pd.DataFrame:
     """
     filepath = build_file_path(RAW_DATA_DIR, "train.csv")
     return load_csv(filepath)
+
+if __name__ == "__main__":
+    df = load_train_data()
+    print(f"Raw training data loaded: {len(df):,} rows × {len(df.columns)} columns")
