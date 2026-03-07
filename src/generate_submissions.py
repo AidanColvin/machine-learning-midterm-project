@@ -11,18 +11,18 @@ def create_submissions():
     Trains four machine learning models using cross-validation.
     Generates Kaggle submission CSV files with probability predictions.
     """
-    if not os.path.exists('data/test.csv'):
+    if not os.path.exists('data/raw/test.csv'):
         print("Error: data/test.csv not found.")
         return
 
     print("Loading training data...")
     train_df = pd.read_csv('data/preprocessed/preprocessed-train-data.csv')
-    X_train = train_df.drop(['Heart Disease', 'id'], axis=1, errors='ignore')
+    X_train = train_df.drop(['Heart Disease', 'id', 'is_outlier'], axis=1, errors='ignore')
     y_train = train_df['Heart Disease']
 
     print("Loading test data...")
-    test_df = pd.read_csv('data/test.csv')
-    X_test = test_df.drop(['id'], axis=1, errors='ignore')
+    test_df = pd.read_csv('data/raw/test.csv')
+    X_test = test_df.drop(['id', 'is_outlier'], axis=1, errors='ignore')
     test_ids = test_df['id']
 
     # Use a fast LinearSVC wrapped in a probability calibrator
@@ -50,7 +50,7 @@ def create_submissions():
 
         # Save formatted Kaggle submission file
         submission_df = pd.DataFrame({'id': test_ids, 'Heart Disease': probabilities})
-        output_file = f'data/submission_{name}.csv'
+        output_file = f'data/submissions/submission_{name}.csv'
         submission_df.to_csv(output_file, index=False)
         print(f"Saved {output_file}\n")
 

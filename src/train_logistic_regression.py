@@ -7,10 +7,10 @@ def train_and_evaluate() -> None:
     Loads split data and trains Logistic Regression.
     Calculates accuracy and saves the result to CSV.
     """
-    X_train = pd.read_csv('data/X_train.csv')
-    X_test = pd.read_csv('data/X_test.csv')
-    y_train = pd.read_csv('data/y_train.csv')['Heart Disease']
-    y_test = pd.read_csv('data/y_test.csv')['Heart Disease']
+    X_train = pd.read_csv('data/preprocessed/X_train.csv')
+    X_test = pd.read_csv('data/preprocessed/X_test.csv')
+    y_train = pd.read_csv('data/preprocessed/y_train.csv')['Heart Disease']
+    y_test = pd.read_csv('data/preprocessed/y_test.csv')['Heart Disease']
     
     model = LogisticRegression(max_iter=2000)
     model.fit(X_train, y_train)
