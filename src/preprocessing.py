@@ -475,8 +475,9 @@ def preprocess(df: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
     return df, balance_report
 
 if __name__ == "__main__":
-    from load_raw_training_data import load_train_data
-
-    df_raw = load_train_data()
+    import importlib
+    load_module = importlib.import_module("load-raw-training-data")
+    
+    df_raw = load_module.load_train_data()
     df_clean, balance_report = preprocess(df_raw)
     print("Preprocessing complete.")
