@@ -29,8 +29,10 @@ The goal is to predict the probability that an individual has heart disease, sco
 
 # PART 2 - Methodology
 
+# Overview of approaches
 Three models were tested: Logistic Regression with Ridge regularization, Random Forest, and Gradient Boosting. Lasso regularization was used for feature selection. Spline transformations were applied to continuous features. Data was split 80/20 for training and testing. All models were evaluated using 5-fold cross-validation scored by AUC.
 
+# Rationale for chosen method
 Logistic Regression with Ridge was used as an interpretable baseline. Random Forest captured non-linear relationships between features. Gradient Boosting was selected as the final model based on the highest cross-validation AUC. Random Forest was limited to 100 trees due to memory constraints.
 
 Features were standardized using StandardScaler fit on training data only. Lasso CV was applied for feature selection, retaining 12 of 13 features. Spline transformations (n_knots=5, degree=3) were applied to continuous features. Logistic Regression hyperparameters were tuned using GridSearchCV over C=[0.001, 0.01, 0.1, 1, 10, 100]. All models were trained on the full training set after cross-validation.
@@ -52,7 +54,7 @@ Features were standardized using StandardScaler fit on training data only. Lasso
 | 13 | BP | 0.52% | Negative |
 
 
-
+# Implementation details
 Raw data was loaded from CSV and passed through a preprocessing pipeline.
 The target variable was encoded from string labels (Presence/Absence) to binary integers (1/0).
 Continuous features were standardized using z-score scaling (mean=0, std=1) fit on training data only.
