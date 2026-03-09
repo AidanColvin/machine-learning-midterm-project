@@ -1,0 +1,41 @@
+# Midterm Project Report - DRAFT 1
+
+# Part 1 - Problem Description
+
+""" Clarity of the problem statement: The student clearly articulates the problem being solved by the competition. (5 points) """
+
+
+
+Given 13 features from an individual, predict the probability that they have heart disease.    
+
+
+
+
+
+
+# Part 1 - Problem Description
+
+""" Clarity of the problem statement: The student clearly articulates the problem being solved by the competition. (5 points) """
+
+
+This competition is a binary classification problem. Using 13 clinical features, the goal is to predict the probability that an individual has heart disease. Models are evaluated using the area under the ROC curve (AUC).
+
+
+determine the probobilty that an idivushal experinces Heart Disase, 
+
+The goal of this project is to create and implment a binary classification model that evlauetes based upon 13 features to determine if Heart Diases is present or absant. 
+
+Heart Disase, effects a signifgent portion of the population. This project revolves around building a binary classification model, that uses 13 features to determine if an indavisual.
+
+ 0 = Absence (no heart disease), 1 = Presence (has heart disease)..  
+is centered around building a binary classfaction model, using 13 features. 
+
+Data for this project was synthetically generated using a deep learning model that was trained on a Heart Dissase prediction database.   
+
+
+This compentation is to build a binary classification model, that uses 13 features to determine the probobilty that an individual has heartdisase. 
+Build and evaluate a classification model that uses synthetically generated heart disease data that was specifically created through a deep learning model applied to heart disease, prediction, database.
+
+ Determing the liklyhood of an individual experincing heartdisase. 
+
+
