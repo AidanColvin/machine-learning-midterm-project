@@ -34,7 +34,7 @@ def run():
 
     # Logistic Regression Ridge + Spline
     print("\n  ── Logistic Regression Ridge + Spline ──")
-    lr = LogisticRegression(penalty='l2', C=1.0, solver='lbfgs', max_iter=3000, random_state=42)
+    lr = LogisticRegression(solver='lbfgs', C=1.0, l1_ratio=0, max_iter=3000, random_state=42)
     lr.fit(X_tr_spl, y_train)
     save_submission(lr.predict_proba(X_te_spl)[:, 1], ids, 'logistic_ridge_spline')
 
