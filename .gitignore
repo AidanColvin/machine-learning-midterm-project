@@ -1,2 +1,4 @@
 data/preprocessed/*.csv
 data/submissions/*.csv
+data/preprocessed/*.csv
+data/submissions/*.csv
