@@ -1,118 +1,65 @@
 import pandas as pd
 import numpy as np
-import os
+from pathlib import Path
 from sklearn.linear_model import LogisticRegression
-from sklearn.svm import LinearSVC
-from sklearn.calibration import CalibratedClassifierCV
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-from sklearn.model_selection import cross_val_score, StratifiedKFold
 
-CV5  = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+SUBMISSIONS_DIR = Path("data/submissions")
+SUBMISSIONS_DIR.mkdir(parents=True, exist_ok=True)
 
-def print_dataset_stats(X, y, label="Training") -> None:
-    print(f"\n  ▶  {label} Dataset Summary")
-    print("  ══════════════════════════════════════════════════════")
-    print(f"     Sample size        : {len(X):,} rows")
-    print(f"     Number of features : {X.shape[1]}")
-    print(f"     Dependent variable : Heart Disease (binary)")
-    counts = y.value_counts().sort_index()
-    for lbl, count in counts.items():
-        bar  = "█" * int((count / len(y)) * 20)
-        name = "Absence" if lbl == 0 else "Presence"
-        print(f"     {name:<10} {bar}  {count:,} ({count/len(y)*100:.1f}%)")
-    print(f"\n  ── Feature Descriptive Stats (all {X.shape[1]} features) ────────")
-    print(f"     {'Feature':<28} {'Mean':>8} {'Std':>8} {'Min':>8} {'Max':>8} {'Missing':>8}")
-    print(f"     {'───────':<28} {'────':>8} {'───':>8} {'───':>8} {'───':>8} {'───────':>8}")
-    for col in X.columns:
-        s = X[col]
-        print(f"     {col:<28} {s.mean():>8.3f} {s.std():>8.3f} {s.min():>8.3f} {s.max():>8.3f} {int(s.isna().sum()):>8}")
-    print("  ══════════════════════════════════════════════════════\n")
+def load_data():
+    X_train_spl = pd.read_csv('data/preprocessed/X_train_spline.csv')
+    X_train_las = pd.read_csv('data/preprocessed/X_train_lasso.csv')
+    y_train     = pd.read_csv('data/preprocessed/y_train.csv')['Heart Disease']
 
-def create_submissions() -> None:
-    train_df = pd.read_csv('data/preprocessed/preprocessed-train-data.csv')
-    X = train_df.drop(columns=[c for c in ['Heart Disease','id','is_outlier'] if c in train_df.columns])
-    y = train_df['Heart Disease']
-    if pd.api.types.is_string_dtype(y):
-        y = y.map({'Absence': 0, 'Presence': 1}).astype(int)
+    test_df     = pd.read_csv('data/raw/test.csv')
+    test_df     = test_df.drop(columns=[c for c in ['id','is_outlier'] if c in test_df.columns])
 
-    test_df  = pd.read_csv('data/raw/test.csv')
-    test_ids = test_df['id']
-    X_test   = test_df.drop(columns=[c for c in ['id','is_outlier'] if c in test_df.columns])
-    X_test   = X_test.reindex(columns=X.columns, fill_value=0)
+    # align test columns to lasso and spline feature sets
+    X_test_las  = test_df.reindex(columns=X_train_las.columns, fill_value=0)
+    X_test_spl  = test_df.reindex(columns=X_train_spl.columns, fill_value=0)
 
-    print_dataset_stats(X, y, label="Preprocessed Training")
+    ids = pd.read_csv('data/raw/test.csv')['id'] if 'id' in pd.read_csv('data/raw/test.csv', nrows=1).columns else pd.RangeIndex(len(test_df))
+    return X_train_spl, X_train_las, y_train, X_test_spl, X_test_las, ids
 
-    os.makedirs('data/submissions', exist_ok=True)
+def save_submission(probs, ids, name):
+    path = SUBMISSIONS_DIR / f"submission_{name}.csv"
+    pd.DataFrame({'id': ids, 'Heart Disease': probs}).to_csv(path, index=False)
+    print(f"  Saved → {path}")
 
-    # Already saved logistic + svm — skip those, start from random forest
-    models = {
-        'random_forest': (
-            'Random Forest 100 trees (5-fold)',
-            RandomForestClassifier(n_estimators=100, max_depth=15,
-                                   min_samples_leaf=10, max_features='sqrt',
-                                   random_state=42, n_jobs=1),
-            CV5
-        ),
-        'gradient_boosting': (
-            'Gradient Boosting 200 trees (5-fold)',
-            GradientBoostingClassifier(n_estimators=200, max_depth=4,
-                                       learning_rate=0.05, subsample=0.8,
-                                       random_state=42),
-            CV5
-        ),
-        'gradient_boosting_deep': (
-            'Gradient Boosting Deep 300 trees (5-fold)',
-            GradientBoostingClassifier(n_estimators=300, max_depth=5,
-                                       learning_rate=0.03, subsample=0.8,
-                                       min_samples_leaf=10, random_state=42),
-            CV5
-        ),
-    }
+def run():
+    print("\n  ▶  Generating Submissions")
+    print("  ══════════════════════════════════════════")
+    X_tr_spl, X_tr_las, y_train, X_te_spl, X_te_las, ids = load_data()
 
-    trained = {}
-    results = []
-    for name, (label, model, cv) in models.items():
-        pad = '─' * max(1, 52 - len(label))
-        print(f"  ── {label} {pad}")
-        cv_scores = cross_val_score(model, X, y, cv=cv, scoring='roc_auc', n_jobs=1)
-        auc = cv_scores.mean()
-        print(f"     CV AUC : {auc:.4f}  std={cv_scores.std():.4f}  folds={cv.n_splits}")
-        print(f"     Training on 100% of data...")
-        model.fit(X, y)
-        probs = model.predict_proba(X_test)[:, 1]
-        out   = f'data/submissions/submission_{name}.csv'
-        pd.DataFrame({'id': test_ids, 'Heart Disease': probs}).to_csv(out, index=False)
-        print(f"     Saved → {out}\n")
-        trained[name] = probs
-        results.append({'Model': label, 'CV Folds': cv.n_splits,
-                        'ROC AUC': round(auc, 4), 'Std': round(cv_scores.std(), 4)})
+    # Logistic Regression Ridge + Spline
+    print("\n  ── Logistic Regression Ridge + Spline ──")
+    lr = LogisticRegression(penalty='l2', C=1.0, solver='lbfgs', max_iter=3000, random_state=42)
+    lr.fit(X_tr_spl, y_train)
+    save_submission(lr.predict_proba(X_te_spl)[:, 1], ids, 'logistic_ridge_spline')
 
-    # Load already-saved logistic + svm probs for ensemble
-    lr_probs  = pd.read_csv('data/submissions/submission_logistic_regression.csv')['Heart Disease'].values
-    svm_probs = pd.read_csv('data/submissions/submission_svm.csv')['Heart Disease'].values
+    # Random Forest
+    print("\n  ── Random Forest ───────────────────────")
+    rf = RandomForestClassifier(n_estimators=100, max_depth=15, min_samples_leaf=10,
+                                max_features='sqrt', random_state=42, n_jobs=1)
+    rf.fit(X_tr_las, y_train)
+    save_submission(rf.predict_proba(X_te_las)[:, 1], ids, 'random_forest')
 
-    print("  ── Ensembles ───────────────────────────────────────────")
-    ensemble_probs = {
-        'ensemble_gb_lr':  np.mean([trained['gradient_boosting_deep'], lr_probs], axis=0),
-        'ensemble_gb_rf':  np.mean([trained['gradient_boosting_deep'], trained['random_forest']], axis=0),
-        'ensemble_all':    np.mean([trained['gradient_boosting_deep'], trained['gradient_boosting'],
-                                    trained['random_forest'], lr_probs, svm_probs], axis=0),
-    }
-    for ename, probs in ensemble_probs.items():
-        out = f'data/submissions/submission_{ename}.csv'
-        pd.DataFrame({'id': test_ids, 'Heart Disease': probs}).to_csv(out, index=False)
-        print(f"     Saved → {out}")
+    # Gradient Boosting
+    print("\n  ── Gradient Boosting ───────────────────")
+    gb = GradientBoostingClassifier(n_estimators=200, max_depth=4, learning_rate=0.05,
+                                    subsample=0.8, random_state=42)
+    gb.fit(X_tr_las, y_train)
+    save_submission(gb.predict_proba(X_te_las)[:, 1], ids, 'gradient_boosting')
 
-    results_df = pd.DataFrame(results).sort_values('ROC AUC', ascending=False)
-    results_df.to_csv('data/preprocessed/submission_comparison.csv', index=False)
+    # Ensemble
+    print("\n  ── Ensemble (avg all 3) ────────────────")
+    ensemble = (lr.predict_proba(X_te_spl)[:, 1] +
+                rf.predict_proba(X_te_las)[:, 1] +
+                gb.predict_proba(X_te_las)[:, 1]) / 3
+    save_submission(ensemble, ids, 'ensemble_all')
 
-    print(f"\n  ── Model Comparison ────────────────────────────────────")
-    print(f"     {'Model':<42} {'Folds':>6} {'ROC AUC':>10} {'Std':>7}")
-    print(f"     {'─────':<42} {'─────':>6} {'───────':>10} {'───':>7}")
-    for _, row in results_df.iterrows():
-        bar = "█" * int(row['ROC AUC'] * 25)
-        print(f"     {row['Model']:<42} {int(row['CV Folds']):>6} {row['ROC AUC']:>10.4f} {row['Std']:>7.4f}  {bar}")
-    print(f"\n  ✔  Submit: submission_ensemble_all.csv first, then submission_gradient_boosting_deep.csv\n")
+    print("\n  ✔  Done\n")
 
 if __name__ == "__main__":
-    create_submissions()
+    run()
