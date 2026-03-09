@@ -30,3 +30,5 @@ The objective of the competition is to accurately predict the probability of hea
 
 # Relevance to Field
 Predicting heart disease from routine clinical data supports patient care. This model uses 13 features to calculate a disease probability score. In clinical settings, probability scores help identify vulnerable patients. This allows for targeted preventive treatments.
+
+# PART 2 - Methodology
