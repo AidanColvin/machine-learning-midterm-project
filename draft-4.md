@@ -35,10 +35,10 @@ Predicting heart disease from routine clinical data supports patient care. This 
 # PART 2 - Methodology
 
 # Overview of approaches
-Three models were tested: Logistic Regression with Ridge regularization, Random Forest, and Gradient Boosting. Lasso regularization was used for feature selection. Spline transformations were applied to continuous features. Data was split 80/20 for training and testing. All models were evaluated using 5-fold cross-validation scored by AUC.
+Three models were tested. Logistic Regression with Ridge regularization and Spline transformations served as an interpretable baseline. Random Forest was tested to handle mixed feature types and capture non-linear relationships. Gradient Boosting was tested to iteratively correct errors from prior trees. It is well-suited for tabular clinical data. All models used 5-fold stratified cross-validation scored by AUC.
 
 # Rationale for chosen method
-Logistic Regression with Ridge was used as an interpretable baseline. Random Forest captured non-linear relationships between features. Gradient Boosting was selected as the final model based on the highest cross-validation AUC. Random Forest was limited to 100 trees due to memory constraints.
+Gradient Boosting was chosen as the final model. It achieved the highest cross-validation AUC. It also achieved the highest true positive rate at 86.6%. Missing a heart disease case is more costly than a false alarm. Maximizing detection is the priority. Random Forest was competitive but limited to 100 trees due to memory constraints. This likely capped its performance ceiling. Logistic Regression provided a strong, interpretable baseline. However, the non-linear structure captured by boosting yielded a meaningful gain in sensitivity.
 
 Features were standardized using StandardScaler fit on training data only. Lasso CV was applied for feature selection, retaining 12 of 13 features. Spline transformations (n_knots=5, degree=3) were applied to continuous features. Logistic Regression hyperparameters were tuned using GridSearchCV over C=[0.001, 0.01, 0.1, 1, 10, 100]. All models were trained on the full training set after cross-validation.
 
@@ -61,15 +61,11 @@ Features were standardized using StandardScaler fit on training data only. Lasso
 
 # Implementation details
 Raw data was loaded from CSV and passed through a preprocessing pipeline.
-The target variable was encoded from string labels (Presence/Absence) to binary integers (1/0).
-Continuous features were standardized using z-score scaling (mean=0, std=1) fit on training data only.
-Missing values were imputed using median for continuous features and mode for categorical features.
-Outliers were flagged using a z-score threshold of 3.0 but retained in the dataset.
-Data was split 80/20 into training and test sets using random_state=42.
+The target variable was encoded from string labels (Presence/Absence) to binary integers (1/0). Continuous features were standardized using z-score scaling (mean=0, std=1) fit on training data only. Missing values were imputed using median for continuous features and mode for categorical features.
+Outliers were flagged using a z-score threshold of 3.0 but retained in the dataset Data was split 80/20 into training and test sets using random_state=42.
 Lasso CV dropped Blood Pressure (0.52% correlation), retaining 12 of 13 features.
 Spline transformations (n_knots=5, degree=3) were applied to continuous features.
-Logistic Regression hyperparameters were tuned using GridSearchCV over C=[0.001, 0.01, 0.1, 1, 10, 100].
-All models used 5-fold stratified cross-validation scored by AUC.
+Logistic Regression hyperparameters were tuned using GridSearchCV over C=[0.001, 0.01, 0.1, 1, 10, 100]. All models used 5-fold stratified cross-validation scored by AUC.
 
 ## Reproducibility
 
@@ -90,28 +86,15 @@ df = encode_target_column(df)
 df = standardize_all_continuous(df)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 ```
+# Part 3 - Results and Evaluation
 
+## Performance metrics
+AUC was chosen as the primary metric. It evaluates accuracy across all classification thresholds. This is critical for medical screening to balance the high cost of a missed diagnosis against a false positive. While Gradient Boosting achieved the highest predictive accuracy (AUC = 0.9540), the margin of improvement over the Logistic Regression baseline (AUC = 0.9507) was relatively small. In a clinical biostatistics setting, this presents an interesting trade-off. Gradient Boosting operates as a "black box," making it difficult for doctors to understand exactly how a prediction was made. Logistic Regression and Decision Trees, while slightly less accurate, offer transparent rules (such as the tree structure in the Appendix) that medical professionals can easily follow and verify.
 
-# PART 3 - Results and Evaluation
+## Analysis of results
+The feature importance analysis (Figure 1) yielded significant clinical insights. The Thallium stress test was overwhelmingly the most important predictor of heart disease, accounting for roughly 52% of the model's predictive weight, followed by Chest Pain Type (16.5%). This aligns with physiological reality, as Thallium scans directly measure blood flow to the heart muscle. Interestingly, resting blood pressure had virtually no predictive power in this specific dataset and was dropped during Lasso regularization.
 
-# Performance metrics
-While Gradient Boosting achieved the highest predictive accuracy (AUC = 0.9543), the margin of improvement over the Logistic Regression baseline (AUC = 0.9510) was relatively small. In a clinical biostatistics setting, this presents an interesting trade-off. Gradient Boosting operates as a "black box," making it difficult for doctors to understand exactly how a prediction was made. Logistic Regression and Decision Trees, while slightly less accurate, offer transparent rules (such as the tree structure in the Appendix) that medical professionals can easily follow and verify.
-
-# Analysis of results
-The feature importance analysis (Figure X) yielded significant clinical insights. The Thallium stress test was overwhelmingly the most important predictor of heart disease, accounting for roughly 52% of the model's predictive weight, followed by Chest Pain Type (16.5%). This aligns with physiological reality, as Thallium scans directly measure blood flow to the heart muscle. Interestingly, resting blood pressure had virtually no predictive power in this specific dataset and was dropped during Lasso regularization.
-
-
-
-# Comparative analysis
-Gradient Boosting achieved the highest cross-validation AUC (0.9543). Random Forest achieved 0.9530. Logistic Regression achieved 0.9510. All three models successfully identified healthy patients, with true negative rates around 90.4%. However, Gradient Boosting achieved the highest true positive rate at 86.6%. Random Forest identified 86.3% of positive cases. Logistic Regression identified 85.7%.
+## Comparative analysis
+Gradient Boosting achieved the highest cross-validation AUC (0.9540). Random Forest achieved 0.9528. Logistic Regression achieved 0.9507. All three models successfully identified healthy patients, with true negative rates around 90.4%. However, Gradient Boosting achieved the highest true positive rate at 86.6%. Random Forest identified 86.3% of positive cases. Logistic Regression identified 85.7%.
 
 Gradient Boosting was selected as the final model due to this higher true positive rate. While Logistic Regression provides a more interpretable baseline, maximizing the detection of heart disease is the primary goal for this task. To explain the model's logic, feature importance was calculated. The Thallium stress test accounts for exactly 52.0% of the model's decisions. Chest pain type accounts for 16.5%.
-
-
-# ROC CURVES ACROSS MODELS ---> Make visual mapping like step wise
-
-
-# Appendix
-
-
-
