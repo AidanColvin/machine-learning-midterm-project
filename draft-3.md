@@ -94,15 +94,24 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 
 # PART 3 - Results and Evaluation
 
+# Performance metrics
+While Gradient Boosting achieved the highest predictive accuracy (AUC = 0.9543), the margin of improvement over the Logistic Regression baseline (AUC = 0.9510) was relatively small. In a clinical biostatistics setting, this presents an interesting trade-off. Gradient Boosting operates as a "black box," making it difficult for doctors to understand exactly how a prediction was made. Logistic Regression and Decision Trees, while slightly less accurate, offer transparent rules (such as the tree structure in the Appendix) that medical professionals can easily follow and verify.
+
+# Analysis of results
+The feature importance analysis (Figure X) yielded significant clinical insights. The Thallium stress test was overwhelmingly the most important predictor of heart disease, accounting for roughly 52% of the model's predictive weight, followed by Chest Pain Type (16.5%). This aligns with physiological reality, as Thallium scans directly measure blood flow to the heart muscle. Interestingly, resting blood pressure had virtually no predictive power in this specific dataset and was dropped during Lasso regularization.
 
 
 
+# Comparative analysis
+Gradient Boosting achieved the highest cross-validation AUC (0.9543). Random Forest achieved 0.9530. Logistic Regression achieved 0.9510. All three models successfully identified healthy patients, with true negative rates around 90.4%. However, Gradient Boosting achieved the highest true positive rate at 86.6%. Random Forest identified 86.3% of positive cases. Logistic Regression identified 85.7%.
+
+Gradient Boosting was selected as the final model due to this higher true positive rate. While Logistic Regression provides a more interpretable baseline, maximizing the detection of heart disease is the primary goal for this task. To explain the model's logic, feature importance was calculated. The Thallium stress test accounts for exactly 52.0% of the model's decisions. Chest pain type accounts for 16.5%.
 
 
 # ROC CURVES ACROSS MODELS ---> Make visual mapping like step wise
 
 
-# APENDIX
+# Appendix
 
 
 
