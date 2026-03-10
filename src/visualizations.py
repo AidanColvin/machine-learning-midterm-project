@@ -10,7 +10,7 @@ from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.model_selection import cross_val_score, StratifiedKFold
 from sklearn.metrics import roc_curve, auc, confusion_matrix
 
-FIGURES_DIR = Path("figures")
+FIGURES_DIR = Path("data/visualizations")
 FIGURES_DIR.mkdir(parents=True, exist_ok=True)
 
 CV5     = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)

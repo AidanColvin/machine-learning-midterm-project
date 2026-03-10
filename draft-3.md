@@ -28,7 +28,7 @@ The training dataset contains 630,000 observations. The test dataset contains 27
 The objective of the competition is to accurately predict the probability of heart disease for unseen test data. Success is evaluated using the Area Under the Receiver Operating Characteristic Curve (AUC). An AUC score of 1.0 represents a perfect prediction. An AUC score of 0.5 represents random guessing.
 
 # Relevance to Field
-Predicting heart disease from routine clinical data supports patient care. This model uses 13 features to calculate a disease probability score. In clinical settings, probability scores help identify vulnerable patients. This allows for targeted preventive treatments.
+Predicting heart disease from routine clinical data supports patient care. This model uses 13 features to calculate a disease probability score. In clinical settings, probability scores help identify vulnerable patients. This allows for targeted preventive treatments. Using synthetic data to train this model also protects patient privacy.
 
 
 

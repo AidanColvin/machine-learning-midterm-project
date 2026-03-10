@@ -8,7 +8,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.metrics import roc_curve, auc
 
-FIGURES_DIR = Path("figures")
+FIGURES_DIR = Path("data/visualizations")
 FIGURES_DIR.mkdir(parents=True, exist_ok=True)
 
 X_tr_spl = pd.read_csv('data/preprocessed/X_train_spline.csv')
