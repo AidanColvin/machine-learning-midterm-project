@@ -107,3 +107,4 @@ Two non-standard choices were made. First, Spline transformations were applied t
 
 # Insightfulness
 Resting blood pressure had near-zero predictive power and was dropped by Lasso. BP is a cornerstone of clinical risk scores like the Framingham Risk Score. Its irrelevance here suggests that when direct cardiac measurements are present, indirect proxy measures like BP become redundant. Thallium scans, vessel counts, and ST depression capture the same signal more directly. This has implications for feature selection in biostatistics. Clinically prominent variables are not always statistically informative when more direct measurements are available.
+
