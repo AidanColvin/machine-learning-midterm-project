@@ -1,0 +1,234 @@
+# Midterm Project Report — Heart Disease Prediction
+
+---
+
+## 1. Problem Description
+
+### Problem Statement
+
+This project builds a machine learning model to estimate the probability
+of heart disease from 13 clinical features. Probability estimates could
+help clinicians identify high-risk patients and prioritize preventive
+care.
+
+### Dataset Description
+
+The training set contains 630,000 observations and the test set contains
+270,000. Training labels were generated synthetically by a deep learning
+model trained on a real heart disease dataset, which preserves patient
+privacy. The response variable, **Heart Disease**, is binary: 0 =
+absence, 1 = presence. There are no missing values in either dataset.
+The 13 predictors span continuous, binary, and ordinal types:
+
+| Feature | Type | Description |
+|---|---|---|
+| Age | Continuous | Patient age in years |
+| Blood Pressure | Continuous | Resting blood pressure (mmHg) |
+| Cholesterol | Continuous | Serum cholesterol (mg/dl) |
+| Max Heart Rate | Continuous | Max heart rate during stress test |
+| ST Depression | Continuous | ECG ST-segment depression during exercise |
+| Sex | Binary | 0 = Female, 1 = Male |
+| Fasting Blood Sugar | Binary | Glucose > 120 mg/dl: 0 = No, 1 = Yes |
+| Exercise-Induced Angina | Binary | Chest pain during exercise: 0 = No, 1 = Yes |
+| Chest Pain Type | Ordinal | 1 = Typical, 2 = Atypical, 3 = Non-Anginal, 4 = Asymptomatic |
+| EKG Results | Ordinal | 0 = Normal, 1 = ST-T Abnormality, 2 = LV Hypertrophy |
+| Slope of ST | Ordinal | 1 = Upsloping, 2 = Flat, 3 = Downsloping |
+| Number of Vessels | Ordinal | Major vessels visible via fluoroscopy (0 to 3) |
+| Thallium Stress Test | Ordinal | 3 = Normal, 6 = Fixed Defect, 7 = Reversible Defect |
+
+### Objective
+
+The goal is to estimate heart disease probability for unseen test cases.
+Performance is evaluated by **AUC-ROC**, where 1.0 is perfect and 0.5
+is chance. The competition threshold for a competitive submission is
+AUC > 0.90. The final model achieved a cross-validation AUC of
+**0.9540**.
+
+### Relevance to Field
+
+Heart disease is the leading cause of death globally (WHO, 2023).
+Accurate risk estimates from routine clinical data allow clinicians to
+identify high-risk patients earlier and allocate care more effectively.
+
+---
+
+## 2. Methodology
+
+### Overview of Approaches
+
+Three models were tested, all evaluated with 5-fold stratified
+cross-validation scored by AUC.
+
+**Logistic Regression with Ridge regularization** served as the
+interpretable baseline. Ridge shrinks large coefficients and reduces
+overfitting on correlated features. Cubic splines (degree = 3,
+n\_knots = 5) were added to continuous features to capture non-linear
+patterns while keeping coefficients interpretable.
+
+**Random Forest** builds many decorrelated trees via bootstrap sampling,
+which reduces variance relative to a single tree. It handles mixed
+feature types without scaling. Feature importance was estimated using
+mean decrease in impurity (MDI), which is known to favor
+high-cardinality features and should be read with that caveat.
+Hyperparameters explored: `n_estimators` up to 100 (memory-constrained),
+`max_depth` in {5, 10, None}, `min_samples_split` in {2, 5}.
+
+**Gradient Boosting** fits each new tree to the residual errors of the
+current ensemble, concentrating capacity on misclassified observations.
+This allows it to learn feature interactions that the other two models
+cannot. Hyperparameters tuned: `n_estimators` in {100, 200, 300},
+`learning_rate` in {0.05, 0.1, 0.2}, `max_depth` in {3, 4, 5}.
+
+To screen feature-outcome associations, bivariate correlations were
+computed for all predictors as a descriptive tool, not a formal test.
+Point-biserial correlation was used for continuous features. Pearson
+correlation was used for binary predictors. Pearson was also used for
+ordinal predictors as an approximation; Spearman would be more
+appropriate where intervals are unequal (e.g., Thallium: 3, 6, 7).
+
+| Rank | Feature | \|r\| | Direction |
+|---|---|---|---|
+| 1 | Thallium Stress Test | 0.606 | Positive |
+| 2 | Chest Pain Type | 0.461 | Positive |
+| 3 | Exercise-Induced Angina | 0.442 | Positive |
+| 4 | Max Heart Rate | 0.441 | Negative |
+| 5 | Number of Vessels | 0.439 | Positive |
+| 6 | ST Depression | 0.431 | Positive |
+| 7 | Slope of ST | 0.415 | Positive |
+| 8 | Sex | 0.342 | Positive |
+| 9 | EKG Results | 0.219 | Positive |
+| 10 | Age | 0.212 | Positive |
+| 11 | Cholesterol | 0.083 | Positive |
+| 12 | Fasting Blood Sugar | 0.034 | Positive |
+| 13 | Blood Pressure | 0.005 | Positive |
+
+### Rationale for Chosen Method
+
+Gradient Boosting was selected as the final model based on the highest
+cross-validation AUC (0.9540) and highest sensitivity (86.6%). The
+decision threshold was evaluated across the full ROC curve post-training;
+results confirm a lower threshold can improve sensitivity further at an
+acceptable specificity cost. The values in the Results table use the
+default threshold of 0.5. Random Forest was limited by compute
+constraints with `n_estimators` capped at 100. Logistic Regression was
+a strong baseline but boosting captured non-linear structure that
+improved sensitivity. The main weakness of Gradient Boosting is reduced
+interpretability, which is partially addressed via feature importance
+analysis in the Results section.
+
+### Implementation Details
+
+Data was preprocessed as follows: the target was encoded
+(`Presence` = 1, `Absence` = 0); continuous features were z-score
+standardized with the scaler fit on training data only to prevent
+leakage; no imputation was needed; outliers (z > 3.0) were retained as
+potentially valid extreme values. LassoCV (5-fold, L1 penalty) was
+applied as a standalone feature selection step before any model fitting.
+Blood Pressure (|r| = 0.005) had its coefficient shrunk to zero and was
+dropped, leaving 12 features. This reduced set was used for all models.
+Applying LassoCV-derived selection to other models is a known limitation
+as it can introduce selection bias. Splines were applied to continuous
+features for Logistic Regression only. Logistic Regression C was tuned
+via GridSearchCV over [0.001, 0.01, 0.1, 1, 10, 100]. Final
+hyperparameters: Gradient Boosting `n_estimators = 300`,
+`learning_rate = 0.1`, `max_depth = 4`; Random Forest `n_estimators =
+100`, `max_depth = None`, `min_samples_split = 2`.
+
+### Reproducibility
+
+**Code:** github.com/AidanColvin/machine-learning-midterm-project
+**Language:** Python 3.11 | **Libraries:** scikit-learn 1.4.0,
+pandas 2.1.4, numpy 1.26.2, scipy 1.11.4 | `random_state = 42`
+throughout.
+```bash
+pip install -r requirements.txt
+python3 src/generate_submissions.py
+```
+```python
+# Key preprocessing step
+lasso = LogisticRegressionCV(cv=5, penalty='l1', solver='saga')
+lasso.fit(X_train, y_train)
+selected = X_train.columns[lasso.coef_[0] != 0]  # drops Blood Pressure
+X_train, X_test = X_train[selected], X_test[selected]
+```
+
+---
+
+## 3. Results and Evaluation
+
+### Performance Metrics
+
+AUC-ROC was used as the primary metric because it measures how well a
+model ranks positive cases above negative cases across all thresholds,
+rather than performance at a single cutoff. Sensitivity and specificity
+are reported at the default 0.5 threshold on held-out CV predictions.
+
+| Model | CV AUC | Sensitivity | Specificity |
+|---|---|---|---|
+| Gradient Boosting | **0.9540** | **86.6%** | 90.4% |
+| Random Forest | 0.9528 | 86.3% | 90.4% |
+| Logistic Regression | 0.9507 | 85.7% | 90.4% |
+
+*Figure 2 (Appendix) shows ROC curves for all three models.*
+
+Differences in AUC are small (delta AUC <= 0.003); no formal
+significance test was conducted. All three models reached the same
+specificity at the 0.5 threshold, suggesting further gains there would
+require threshold tuning rather than a model change.
+
+### Analysis of Results
+
+Gradient Boosting feature importances (Figure 1, Appendix) ranked
+Thallium stress test first, followed by Chest Pain Type. MDI is
+influenced by how often a feature is used in splits and should not be
+read as a causal measure. It is directionally consistent with the
+bivariate correlations above, where Thallium also ranked first, though
+the two measures are not independent.
+
+Blood pressure had near-zero correlation with the outcome (|r| = 0.005)
+and was dropped by LassoCV. BP is a standard feature in clinical risk
+scores like the Framingham Risk Score, but here it added no information
+beyond what the direct cardiac measurements already captured. This
+illustrates a general point: a feature's usefulness depends on what
+else is in the model, not just its clinical prominence.
+
+**Strengths:** All models reached AUC at or above 0.950. The pipeline
+runs end-to-end and is fully reproducible. LassoCV provided objective
+feature selection without manual tuning.
+
+**Weaknesses:** Gradient Boosting is a black box, which limits clinical
+interpretability. Random Forest was compute-constrained, so the
+comparison is not fully fair. Synthetic training data may not reflect
+real clinical distributions.
+
+### Comparative Analysis
+
+All three models fell within a narrow AUC range (0.9507 to 0.9540),
+showing the outcome signal is recoverable by multiple methods (Figure
+2, Appendix). Gradient Boosting had the highest sensitivity (86.6% vs.
+85.7% for Logistic Regression) and was selected as the final submission
+on that basis. The uniform specificity across models suggests differences
+arise in how each model handles hard positive cases, not easy negatives.
+
+---
+
+## References
+
+World Health Organization. (2023). *Cardiovascular diseases (CVDs).*
+https://www.who.int/news-room/fact-sheets/detail/cardiovascular-diseases-(cvds)
+
+---
+
+## Appendix
+
+**Figure 1:** Gradient Boosting MDI feature importances, normalized to
+sum to 1.0. Values reflect split frequency, not causal contribution.
+
+**Figure 2:** ROC curves for all three models overlaid, with the
+random-chance diagonal shown.
+
+**Figure 3:** Shallow decision tree (max\_depth = 3) on the 12-feature
+training set, providing an interpretable reference for Gradient Boosting
+predictions.
+
+**Code:** github.com/AidanColvin/machine-learning-midterm-project
