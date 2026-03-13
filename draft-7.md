@@ -126,12 +126,6 @@ arise in how each model handles hard positive cases, not easy negatives.
 
 ## Appendix
 
-**Figure 1:** Gradient Boosting feature importances (mean decrease in impurity), normalized to sum to 1.0. Thallium Stress Test and Chest Pain Type had the highest impurity-based importances in the model. These values reflect relative split frequency and should not be interpreted as proportional causal contributions.
-
-**Figure 2:** ROC curves for Gradient Boosting (AUC = 0.9540), Random Forest (AUC = 0.9528), and Logistic Regression (AUC = 0.9507) overlaid on a single plot with the random-chance diagonal shown for reference.
-
-
-
 
 
 | Feature | Type | Description |
@@ -166,6 +160,11 @@ arise in how each model handles hard positive cases, not easy negatives.
 | 12 | Fasting Blood Sugar | 0.034 | Positive |
 | 13 | Blood Pressure | 0.005 | Positive 
 
+
+
+**Figure 1:** Gradient Boosting feature importances (mean decrease in impurity), normalized to sum to 1.0. Thallium Stress Test and Chest Pain Type had the highest impurity-based importances in the model. These values reflect relative split frequency and should not be interpreted as proportional causal contributions.
+
+**Figure 2:** ROC curves for Gradient Boosting (AUC = 0.9540), Random Forest (AUC = 0.9528), and Logistic Regression (AUC = 0.9507) overlaid on a single plot with the random-chance diagonal shown for reference.
 
 **Figure 3:** Shallow decision tree (max\_depth=3) trained on the same 12-feature training set, illustrating the primary decision logic learned by tree-based models and providing an interpretable reference for the Gradient Boosting predictions.
 
