@@ -1,9 +1,7 @@
 # Midterm Project Report — Heart Disease Prediction
 
 ---
-
 ## 1. Problem Description
-
 
 This project builds a machine learning model to estimate the probability of heart disease from 13 clinical features. Probability estimates from this model may support clinicians in identifying high-risk patients and prioritizing targeted preventive treatment.
 
@@ -15,7 +13,6 @@ The goal of this project is to accurately estimate the probability of heart dise
 Predicting heart disease from routine clinical data has direct implications for patient care. A reliable probability estimate allows clinicians to risk-stratify patients and prioritize preventive intervention for those most at risk. Using synthetic training data further supports this by enabling model development without exposing sensitive patient records. 
 
 ---
-
 ## 2. Methodology
 
 Three models were tested, all evaluated with 5-fold stratified
@@ -123,9 +120,6 @@ on that basis. The uniform specificity across models suggests differences
 arise in how each model handles hard positive cases, not easy negatives.
 
 ---
-
-## Appendix
-
 ## Appendix
 
 ### A. Supplementary Data Tables
@@ -168,35 +162,25 @@ arise in how each model handles hard positive cases, not easy negatives.
 
 ---
 
-### B. Model Interpretability Visualizations
+### B. Model Interpretability and Performance Visualizations
 
-![Feature Importance]([INSERT_YOUR_FEATURE_IMPORTANCE_FILE_NAME.png])
-**Figure 1:** Gradient Boosting feature importances (Gini importance). Thallium Stress Test and Chest Pain Type had the highest impurity-based importances in the model. These values reflect relative split frequency and should not be interpreted as proportional causal contributions.
+![Feature Importance](visualizations/feature_importance.png)
+**Figure 1:** Gradient Boosting feature importances (mean decrease in impurity), normalized to sum to 1.0. Thallium Stress Test and Chest Pain Type had the highest impurity-based importances in the model. These values reflect relative split frequency and should not be interpreted as proportional causal contributions.
 
-![Decision Tree]([INSERT_YOUR_DECISION_TREE_FILE_NAME.png])
+![Decision Tree](visualizations/tree_full.png)
 **Figure 2:** Decision tree (depth=4, 6 features) illustrating the primary decision logic learned by tree-based models. This provides an interpretable reference for the tree structure before ensembling.
 
----
-
-### C. Model Performance Visualizations
-
-![ROC Curves]([INSERT_YOUR_ROC_CURVE_FILE_NAME.png])
+![ROC Curves](visualizations/roc_curves.png)
 **Figure 3:** ROC curves for Gradient Boosting (AUC = 0.9540), Random Forest (AUC = 0.9528), and Logistic Regression (AUC = 0.9507). The right panel zooms into the 0–0.25 False Positive Rate range where model separation is most visible.
 
-![Cross Validation AUC]([INSERT_YOUR_AUC_COMPARISON_FILE_NAME.png])
+![Cross Validation AUC](visualizations/cv_auc_comparison.png)
 **Figure 4:** 5-Fold Cross-Validation AUC Comparison. Error bars indicate variance across the five folds, demonstrating high stability across all models.
 
-![Confusion Matrices]([INSERT_YOUR_CONFUSION_MATRICES_FILE_NAME.png])
+![Confusion Matrices](visualizations/confusion_matrices.png)
 **Figure 5:** Confusion matrices shown as a percentage of the actual class. Values reflect performance at the default 0.5 classification threshold.
 
 ---
 
-### D. Reproducibility
+### C. Reproducibility
+
 **Code:** Full pipeline available at github.com/AidanColvin/machine-learning-midterm-project
-**Figure 1:** Gradient Boosting feature importances (mean decrease in impurity), normalized to sum to 1.0. Thallium Stress Test and Chest Pain Type had the highest impurity-based importances in the model. These values reflect relative split frequency and should not be interpreted as proportional causal contributions.
-
-**Figure 2:** ROC curves for Gradient Boosting (AUC = 0.9540), Random Forest (AUC = 0.9528), and Logistic Regression (AUC = 0.9507) overlaid on a single plot with the random-chance diagonal shown for reference.
-
-**Figure 3:** Shallow decision tree (max\_depth=3) trained on the same 12-feature training set, illustrating the primary decision logic learned by tree-based models and providing an interpretable reference for the Gradient Boosting predictions.
-
-**Code:** Full pipeline at github.com/AidanColvin/machine-learning-midterm-project
