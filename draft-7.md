@@ -80,8 +80,6 @@ appropriate where intervals are unequal (e.g., Thallium: 3, 6, 7).
 | 12 | Fasting Blood Sugar | 0.034 | Positive |
 | 13 | Blood Pressure | 0.005 | Positive |
 
-### Rationale for Chosen Method
-
 Gradient Boosting was selected as the final model based on the highest
 cross-validation AUC (0.9540) and highest sensitivity (86.6%). The
 decision threshold was evaluated across the full ROC curve post-training;
@@ -93,8 +91,6 @@ a strong baseline but boosting captured non-linear structure that
 improved sensitivity. The main weakness of Gradient Boosting is reduced
 interpretability, which is partially addressed via feature importance
 analysis in the Results section.
-
-### Implementation Details
 
 Data was preprocessed as follows: the target was encoded (`Presence` = 1, `Absence` = 0); continuous features were z-score standardized with the scaler fit on training data only to prevent leakage; no imputation was needed; outliers (z > 3.0) were retained as potentially valid extreme values. LassoCV (5-fold, L1 penalty) was applied as a standalone feature selection step before any model fitting. Blood Pressure (|r| = 0.005) had its coefficient shrunk to zero and was dropped, leaving 12 features. This reduced set was used for all models. Applying LassoCV-derived selection to other models is a known limitation as it can introduce selection bias. Splines were applied to continuous features for Logistic Regression only. Logistic Regression C was tuned via GridSearchCV over [0.001, 0.01, 0.1, 1, 10, 100]. Final hyperparameters: Gradient Boosting `n_estimators = 300`, `learning_rate = 0.1`, `max_depth = 4`; Random Forest `n_estimators = 100`, `max_depth = None`, `min_samples_split = 2`.
 
@@ -119,61 +115,51 @@ X_train, X_test = X_train[selected], X_test[selected]
 
 ## 3. Results and Evaluation
 
-### Performance Metrics
+AUC-ROC was used as the primary metric because it measures how well a
+model ranks positive cases above negative cases across all thresholds,
+rather than performance at a single cutoff. Sensitivity and specificity
+are reported at the default 0.5 threshold on held-out CV predictions.
 
-**AUC-ROC** was used as the primary evaluation metric. AUC measures a model's discriminative ability — its capacity to rank a randomly selected positive case above a randomly selected negative case across all classification thresholds — rather than accuracy at any single threshold. This makes it well-suited for medical screening, where the relative cost of false negatives and false positives can shift the optimal operating threshold depending on clinical context.
-
-| Model | CV AUC | Sensitivity (TPR) | Specificity (TNR) |
+| Model | CV AUC | Sensitivity | Specificity |
 |---|---|---|---|
 | Gradient Boosting | **0.9540** | **86.6%** | 90.4% |
 | Random Forest | 0.9528 | 86.3% | 90.4% |
 | Logistic Regression | 0.9507 | 85.7% | 90.4% |
 
-*Figure 2 (Appendix) shows ROC curves for all three models overlaid.*
+Differences in AUC are small (delta AUC <= 0.003); no formal
+significance test was conducted. All three models reached the same
+specificity at the 0.5 threshold, suggesting further gains there would
+require threshold tuning rather than a model change.
 
-The AUC differences between models are numerically small (0.001–0.003). The difference between Gradient Boosting and Logistic Regression (ΔAUC = 0.0033) is modest; while such differences can become statistically detectable in very large samples, the practical clinical significance would need to be evaluated against deployment and interpretability constraints before drawing conclusions about superiority. Notably, all three models converged on an identical true negative rate (90.4%) at the default 0.5 decision threshold. This likely reflects that all three models have learned similar decision boundaries for the negative class at this threshold, and that further specificity gains would require deliberate threshold tuning rather than a change of model.
+Gradient Boosting feature importances (Figure 1, Appendix) ranked
+Thallium stress test first, followed by Chest Pain Type. MDI is
+influenced by how often a feature is used in splits and should not be
+read as a causal measure. It is directionally consistent with the
+bivariate correlations above, where Thallium also ranked first, though
+the two measures are not independent.
 
----
+Blood pressure had near-zero correlation with the outcome (|r| = 0.005)
+and was dropped by LassoCV. BP is a standard feature in clinical risk
+scores like the Framingham Risk Score, but here it added no information
+beyond what the direct cardiac measurements already captured. This
+illustrates a general point: a feature's usefulness depends on what
+else is in the model, not just its clinical prominence.
 
-### Analysis of Results
+**Strengths:** All models reached AUC at or above 0.950. The pipeline
+runs end-to-end and is fully reproducible. LassoCV provided objective
+feature selection without manual tuning.
 
-The Gradient Boosting feature importance analysis (*Figure 1, Appendix*) yielded meaningful clinical insights. The Thallium stress test had the highest impurity-based feature importance in the model, followed by Chest Pain Type. Mean decrease in impurity is influenced by feature cardinality and prevalence in splits and should be interpreted alongside the point-biserial correlations reported above, rather than as a standalone measure of causal importance. The two measures are consistent here — Thallium ranks first on both — supporting the robustness of this finding.
+**Weaknesses:** Gradient Boosting is a black box, which limits clinical
+interpretability. Random Forest was compute-constrained, so the
+comparison is not fully fair. Synthetic training data may not reflect
+real clinical distributions.
 
-The dominance of Thallium scan results aligns with clinical physiology: Thallium scans directly image myocardial perfusion and are among the most proximal available indicators of coronary artery disease.
-
-**Strengths:** All three models exceeded AUC 0.95. The pipeline is fully automated, reproducible, and runs end-to-end from raw CSV to submission file. Sensitivity exceeded 85% across all models, meeting the clinical priority of detection. LassoCV-based feature selection provides an objective, data-driven alternative to manual pruning.
-
-**Weaknesses:** Gradient Boosting operates as a black box, making it difficult for clinicians to trace how a specific prediction was made — a real barrier to clinical adoption where model transparency is often required for regulatory approval or physician trust. Random Forest tuning was limited by available local compute resources, preventing a fully fair comparison at scale. The synthetic training data may not perfectly reflect real clinical distributions, which could affect generalization to real patient populations.
-
----
-
-### Comparative Analysis
-
-All three models performed within a narrow AUC band (0.9507–0.9540), indicating that the signal in this dataset is recoverable by multiple approaches (*Figure 2, Appendix*). Gradient Boosting's primary advantage was in sensitivity: it correctly identified 86.6% of true positive cases versus 85.7% for Logistic Regression — a difference that, while numerically small, would translate into a meaningful increase in correctly detected positive cases at the scale of this dataset. Gradient Boosting was selected as the final submission on this basis.
-
-The near-identical true negative rates across all three models suggest that differentiation occurs primarily in how each model handles ambiguous positive cases near the decision boundary, rather than in its treatment of clearly healthy patients.
-
----
-
-## 4. Creativity and Innovation
-
-### Novelty of Approach
-
-Three non-standard choices were made. First, cubic spline transformations were applied to all continuous features before fitting Logistic Regression. This extends the model beyond linear decision boundaries while keeping coefficients interpretable on each spline basis — a meaningful improvement over standard Logistic Regression in introductory biostatistics pipelines, where non-linearity is typically addressed only through manual interaction terms. Second, LassoCV was used as an objective, data-driven feature selection preprocessing step — applied once before all models — rather than relying on domain-knowledge pruning or manual correlation cutoffs. Third, for Gradient Boosting, the classification threshold was explicitly evaluated post-training across the full ROC curve to identify the sensitivity-maximizing operating point. The sensitivity and specificity values reported in the Results table reflect the default threshold of 0.5; this separate post-hoc analysis confirms that a lower threshold can further improve sensitivity at an acceptable specificity cost — consistent with the asymmetric cost of false negatives in clinical screening.
-
----
-
-### Insightfulness
-
-Resting blood pressure had near-zero bivariate correlation with the outcome ($|r| = 0.005$) and was dropped by LassoCV. Blood pressure is a cornerstone of widely-used clinical risk scores such as the Framingham Risk Score. Its near-zero marginal contribution in this context suggests that when direct cardiac measurements are available — Thallium scans, fluoroscopy vessel counts, ST-segment depression — indirect proxy variables like resting BP become statistically redundant; the direct measurements absorb the signal that BP would otherwise provide.
-
-This has practical implications for feature selection in biostatistics: clinical prominence does not guarantee statistical informativeness when more proximal measurements are present in the same model. In contexts where only routine vital signs are available (e.g., primary care triage), BP would likely recover predictive value. The finding therefore reflects the conditional nature of feature importance rather than a general dismissal of BP as a cardiac risk marker.
-
----
-
-## References
-
-World Health Organization. (2023). *Cardiovascular diseases (CVDs)*. https://www.who.int/news-room/fact-sheets/detail/cardiovascular-diseases-(cvds)
+All three models fell within a narrow AUC range (0.9507 to 0.9540),
+showing the outcome signal is recoverable by multiple methods (Figure
+2, Appendix). Gradient Boosting had the highest sensitivity (86.6% vs.
+85.7% for Logistic Regression) and was selected as the final submission
+on that basis. The uniform specificity across models suggests differences
+arise in how each model handles hard positive cases, not easy negatives.
 
 ---
 
