@@ -28,10 +28,6 @@ The training dataset contains 630,000 observations and the test dataset contains
 ---
 The goal of this project is to accurately estimate the probability of heart disease for unseen test observations. Success is evaluated using the **Area Under the Curve (AUC)**. An AUC of 1.0 represents perfect discrimination between classes; an AUC of 0.5 represents performance equivalent to random guessing.
 
----
-
-### Relevance to Field
-
 Predicting heart disease from routine clinical data has direct implications for patient care. A reliable probability estimate allows clinicians to risk-stratify patients and prioritize preventive intervention for those most at risk. Using synthetic training data further supports this by enabling model development without exposing sensitive patient records. 
 
 ---
