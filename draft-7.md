@@ -34,17 +34,35 @@ Predicting heart disease from routine clinical data has direct implications for 
 
 ## 2. Methodology
 
-### Overview of Approaches
+Three models were tested, all evaluated with 5-fold stratified
+cross-validation scored by AUC.
 
-Three models were tested. **Logistic Regression with Ridge regularization and Spline transformations** served as an interpretable baseline. Ridge regularization penalizes large coefficients proportional to their squared magnitude, preventing overfitting on correlated clinical features such as ST Depression and Slope of ST. Cubic spline transformations (degree=3, n\_knots=5) were applied to continuous features to capture non-linear relationships — for example, the non-monotonic relationship between age and cardiac risk. This extends Logistic Regression's expressiveness while preserving coefficient interpretability on each spline basis, and is not standard in introductory biostatistics pipelines.
+**Logistic Regression with Ridge regularization** served as the
+interpretable baseline. Ridge shrinks large coefficients and reduces
+overfitting on correlated features. Cubic splines (degree = 3,
+n\_knots = 5) were added to continuous features to capture non-linear
+patterns while keeping coefficients interpretable.
 
-**Random Forest** was tested because it constructs an ensemble of decorrelated decision trees via bootstrap sampling and random feature subsets at each split, which reduces variance relative to a single tree. It handles mixed feature types (continuous, binary, ordinal) natively without scaling, captures non-linear feature interactions, and provides built-in mean decrease in impurity estimates for feature importance. Hyperparameters explored included `n_estimators` up to 100 (memory-constrained), `max_depth` ∈ {5, 10, None}, and `min_samples_split` ∈ {2, 5}.
+**Random Forest** builds many decorrelated trees via bootstrap sampling,
+which reduces variance relative to a single tree. It handles mixed
+feature types without scaling. Feature importance was estimated using
+mean decrease in impurity (MDI), which is known to favor
+high-cardinality features and should be read with that caveat.
+Hyperparameters explored: `n_estimators` up to 100 (memory-constrained),
+`max_depth` in {5, 10, None}, `min_samples_split` in {2, 5}.
 
-**scikit-learn's `GradientBoostingClassifier`** was tested because it fits each successive shallow tree to the negative gradient (pseudo-residuals) of the loss function from the current ensemble, iteratively correcting errors in regions of the feature space where prior trees performed poorly. This sequential error-correction allows the model to learn low-order feature interactions — such as the joint effect of Thallium result and ST Depression — that constrained Random Forest and linear Logistic Regression cannot fully exploit. Hyperparameters tuned included `n_estimators` ∈ {100, 200, 300}, `learning_rate` ∈ {0.05, 0.1, 0.2}, and `max_depth` ∈ {3, 4, 5}.
+**Gradient Boosting** fits each new tree to the residual errors of the
+current ensemble, concentrating capacity on misclassified observations.
+This allows it to learn feature interactions that the other two models
+cannot. Hyperparameters tuned: `n_estimators` in {100, 200, 300},
+`learning_rate` in {0.05, 0.1, 0.2}, `max_depth` in {3, 4, 5}.
 
-All models used 5-fold stratified cross-validation scored by AUC, ensuring class balance was preserved across folds given the binary outcome.
-
-To descriptively screen the marginal association between each feature and the binary outcome, bivariate correlations were computed for all predictors. For continuous features, point-biserial correlation was used, which is mathematically equivalent to Pearson correlation when one variable is dichotomous. For binary and ordinal predictors, Pearson correlation with the binary outcome was used as a practical approximation. These values serve as a descriptive ranking tool rather than a formal inferential test:
+To screen feature-outcome associations, bivariate correlations were
+computed for all predictors as a descriptive tool, not a formal test.
+Point-biserial correlation was used for continuous features. Pearson
+correlation was used for binary predictors. Pearson was also used for
+ordinal predictors as an approximation; Spearman would be more
+appropriate where intervals are unequal (e.g., Thallium: 3, 6, 7).
 
 | Rank | Feature | \|r\| | Direction |
 |---|---|---|---|
@@ -52,7 +70,7 @@ To descriptively screen the marginal association between each feature and the bi
 | 2 | Chest Pain Type | 0.461 | Positive |
 | 3 | Exercise-Induced Angina | 0.442 | Positive |
 | 4 | Max Heart Rate | 0.441 | Negative |
-| 5 | Number of Vessels (Fluoroscopy) | 0.439 | Positive |
+| 5 | Number of Vessels | 0.439 | Positive |
 | 6 | ST Depression | 0.431 | Positive |
 | 7 | Slope of ST | 0.415 | Positive |
 | 8 | Sex | 0.342 | Positive |
@@ -62,67 +80,55 @@ To descriptively screen the marginal association between each feature and the bi
 | 12 | Fasting Blood Sugar | 0.034 | Positive |
 | 13 | Blood Pressure | 0.005 | Positive |
 
----
-
 ### Rationale for Chosen Method
 
-**Gradient Boosting** was selected as the final model. It achieved the highest cross-validation AUC (0.9540) and the highest true positive rate (sensitivity) of 86.6%. In medical screening, a missed diagnosis carries greater clinical cost than a false positive. Maximizing sensitivity is therefore a priority. While AUC measures overall discrimination across all thresholds, the classification threshold can be tuned post-training to further prioritize sensitivity; Gradient Boosting's higher AUC provides a better starting point for that trade-off regardless of where the threshold is ultimately set.
-
-Random Forest tuning was limited by available local compute resources, with `n_estimators` capped at 100, which likely constrained its performance ceiling. Logistic Regression provided a strong, interpretable baseline, but the non-linear structure captured by boosting yielded a meaningful gain in sensitivity. Gradient Boosting is particularly well-suited to this dataset: the 13 features span continuous, binary, and ordinal types with complex clinical interactions, and its sequential boosting procedure concentrates model capacity on hard-to-classify cases near the decision boundary — an adaptive behavior that constrained Random Forest and linear Logistic Regression cannot replicate.
-
-A recognized weakness of Gradient Boosting is reduced interpretability relative to Logistic Regression. This trade-off is discussed in the Results section alongside feature importance analysis as a partial mitigation.
-
----
+Gradient Boosting was selected as the final model based on the highest
+cross-validation AUC (0.9540) and highest sensitivity (86.6%). The
+decision threshold was evaluated across the full ROC curve post-training;
+results confirm a lower threshold can improve sensitivity further at an
+acceptable specificity cost. The values in the Results table use the
+default threshold of 0.5. Random Forest was limited by compute
+constraints with `n_estimators` capped at 100. Logistic Regression was
+a strong baseline but boosting captured non-linear structure that
+improved sensitivity. The main weakness of Gradient Boosting is reduced
+interpretability, which is partially addressed via feature importance
+analysis in the Results section.
 
 ### Implementation Details
 
-Raw data was loaded from the competition-provided CSV files (pre-split into training and test sets) and passed through a preprocessing pipeline:
-
-- The target variable was encoded from string labels (`Presence`/`Absence`) to binary integers (1/0).
-- Continuous features were standardized using z-score scaling (mean=0, std=1), with the scaler fit on training data only and applied to the test set to prevent data leakage.
-- No imputation was required; neither dataset contained missing values.
-- Outliers were identified using a z-score threshold of 3.0. All flagged observations were retained to avoid discarding potentially valid extreme clinical values (e.g., very high cholesterol in confirmed disease cases).
-- **LassoCV** (5-fold, logistic loss) was applied to the training set as a standalone preprocessing step for data-driven feature selection, distinct from and prior to the Ridge-regularized Logistic Regression model. Blood Pressure — the feature with the lowest bivariate correlation ($|r| = 0.005$) — had its coefficient shrunk to zero and was dropped, retaining 12 of 13 features. The remaining models were then trained on this reduced feature set.
-- Cubic spline transformations (n\_knots=5, degree=3) were applied to continuous features prior to Logistic Regression fitting only.
-- Logistic Regression hyperparameters were tuned using GridSearchCV over C = [0.001, 0.01, 0.1, 1, 10, 100].
-- Gradient Boosting final hyperparameters: `n_estimators=300`, `learning_rate=0.1`, `max_depth=4`.
-- Random Forest final hyperparameters: `n_estimators=100`, `max_depth=None`, `min_samples_split=2`.
-
----
+Data was preprocessed as follows: the target was encoded
+(`Presence` = 1, `Absence` = 0); continuous features were z-score
+standardized with the scaler fit on training data only to prevent
+leakage; no imputation was needed; outliers (z > 3.0) were retained as
+potentially valid extreme values. LassoCV (5-fold, L1 penalty) was
+applied as a standalone feature selection step before any model fitting.
+Blood Pressure (|r| = 0.005) had its coefficient shrunk to zero and was
+dropped, leaving 12 features. This reduced set was used for all models.
+Applying LassoCV-derived selection to other models is a known limitation
+as it can introduce selection bias. Splines were applied to continuous
+features for Logistic Regression only. Logistic Regression C was tuned
+via GridSearchCV over [0.001, 0.01, 0.1, 1, 10, 100]. Final
+hyperparameters: Gradient Boosting `n_estimators = 300`,
+`learning_rate = 0.1`, `max_depth = 4`; Random Forest `n_estimators =
+100`, `max_depth = None`, `min_samples_split = 2`.
 
 ### Reproducibility
 
-**Code:** github.com/AidanColvin/machine-learning-midterm-project *(public repository; data download instructions in README)*  
-**Language:** Python 3.11  
-**Libraries:** scikit-learn 1.4.0, pandas 2.1.4, numpy 1.26.2, scipy 1.11.4  
-All models and splits used `random_state=42`.
-
-Install dependencies:
+**Code:** github.com/AidanColvin/machine-learning-midterm-project
+**Language:** Python 3.11 | **Libraries:** scikit-learn 1.4.0,
+pandas 2.1.4, numpy 1.26.2, scipy 1.11.4 | `random_state = 42`
+throughout.
 ```bash
 pip install -r requirements.txt
-```
-
-Run the full pipeline:
-```bash
 python3 src/generate_submissions.py
 ```
-
-Preprocessing pipeline (abbreviated):
 ```python
-df = drop_id_column(df)
-df = encode_target_column(df)          # "Presence"->1, "Absence"->0
-df = standardize_continuous(df)        # fit on train, transform both sets
-# No imputation needed — dataset contains no missing values
-X_train, y_train = df_train.drop("Heart Disease", axis=1), df_train["Heart Disease"]
-X_test = df_test.drop("Heart Disease", axis=1)
-
-# LassoCV feature selection (standalone step, prior to model fitting)
+# Key preprocessing step
 lasso = LogisticRegressionCV(cv=5, penalty='l1', solver='saga')
 lasso.fit(X_train, y_train)
-selected = X_train.columns[lasso.coef_[0] != 0]   # drops Blood Pressure
+selected = X_train.columns[lasso.coef_[0] != 0]  # drops Blood Pressure
 X_train, X_test = X_train[selected], X_test[selected]
 ```
-
 ---
 
 ## 3. Results and Evaluation
