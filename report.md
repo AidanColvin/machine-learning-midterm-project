@@ -1,5 +1,5 @@
 # Midterm Project Report — Heart Disease Prediction
-Generative AI was used strictly for basic spelling and grammar correction, while all code, results, phrasing, and structural organization are my own original work.
+Generative AI provided limited assistance with general editing and phrasing, while the core content, code, results, and overall organization remain my original work.
 
 ### Introduction 
 
