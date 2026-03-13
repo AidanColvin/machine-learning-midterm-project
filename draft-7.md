@@ -145,14 +145,13 @@ beyond what the direct cardiac measurements already captured. This
 illustrates a general point: a feature's usefulness depends on what
 else is in the model, not just its clinical prominence.
 
-**Strengths:** All models reached AUC at or above 0.950. The pipeline
-runs end-to-end and is fully reproducible. LassoCV provided objective
-feature selection without manual tuning.
+| Model | CV AUC (95% CI) | Sensitivity | Specificity |
+|---|---|---|---|
+| Gradient Boosting | **0.9540** [0.951–0.957] | **86.6%** | 90.4% |
+| Random Forest | 0.9528 [0.949–0.955] | 86.3% | 90.4% |
+| Logistic Regression | 0.9507 [0.948–0.953] | 85.7% | 90.4% |
 
-**Weaknesses:** Gradient Boosting is a black box, which limits clinical
-interpretability. Random Forest was compute-constrained, so the
-comparison is not fully fair. Synthetic training data may not reflect
-real clinical distributions.
+The primary strength of this approach is that all models achieved a high AUC of at least 0.950 using a fully reproducible end-to-end pipeline. Additionally, applying LassoCV provided an objective method for feature selection without requiring manual tuning. However, there are notable limitations to this methodology. The final Gradient Boosting model operates largely as a black box, which restricts its clinical interpretability. Furthermore, the model comparisons are not entirely balanced due to compute constraints that capped the Random Forest estimators. Finally, the reliance on synthetic training data means the learned patterns may not perfectly reflect real-world clinical distributions
 
 All three models fell within a narrow AUC range (0.9507 to 0.9540),
 showing the outcome signal is recoverable by multiple methods (Figure
