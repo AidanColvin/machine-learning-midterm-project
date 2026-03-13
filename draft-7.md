@@ -120,11 +120,11 @@ model ranks positive cases above negative cases across all thresholds,
 rather than performance at a single cutoff. Sensitivity and specificity
 are reported at the default 0.5 threshold on held-out CV predictions.
 
-| Model | CV AUC | Sensitivity | Specificity |
+| Model | CV AUC (95% CI) | Sensitivity | Specificity |
 |---|---|---|---|
-| Gradient Boosting | **0.9540** | **86.6%** | 90.4% |
-| Random Forest | 0.9528 | 86.3% | 90.4% |
-| Logistic Regression | 0.9507 | 85.7% | 90.4% |
+| Gradient Boosting | **0.9540** [0.951–0.957] | **86.6%** | 90.4% |
+| Random Forest | 0.9528 [0.949–0.955] | 86.3% | 90.4% |
+| Logistic Regression | 0.9507 [0.948–0.953] | 85.7% | 90.4% |
 
 Differences in AUC are small (delta AUC <= 0.003); no formal
 significance test was conducted. All three models reached the same
@@ -144,12 +144,6 @@ scores like the Framingham Risk Score, but here it added no information
 beyond what the direct cardiac measurements already captured. This
 illustrates a general point: a feature's usefulness depends on what
 else is in the model, not just its clinical prominence.
-
-| Model | CV AUC (95% CI) | Sensitivity | Specificity |
-|---|---|---|---|
-| Gradient Boosting | **0.9540** [0.951–0.957] | **86.6%** | 90.4% |
-| Random Forest | 0.9528 [0.949–0.955] | 86.3% | 90.4% |
-| Logistic Regression | 0.9507 [0.948–0.953] | 85.7% | 90.4% |
 
 The primary strength of this approach is that all models achieved a high AUC of at least 0.950 using a fully reproducible end-to-end pipeline. Additionally, applying LassoCV provided an objective method for feature selection without requiring manual tuning. However, there are notable limitations to this methodology. The final Gradient Boosting model operates largely as a black box, which restricts its clinical interpretability. Furthermore, the model comparisons are not entirely balanced due to compute constraints that capped the Random Forest estimators. Finally, the reliance on synthetic training data means the learned patterns may not perfectly reflect real-world clinical distributions
 
