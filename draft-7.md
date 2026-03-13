@@ -59,23 +59,6 @@ analysis in the Results section.
 
 Data was preprocessed as follows: the target was encoded (`Presence` = 1, `Absence` = 0); continuous features were z-score standardized with the scaler fit on training data only to prevent leakage; no imputation was needed; outliers (z > 3.0) were retained as potentially valid extreme values. LassoCV (5-fold, L1 penalty) was applied as a standalone feature selection step before any model fitting. Blood Pressure (|r| = 0.005) had its coefficient shrunk to zero and was dropped, leaving 12 features. This reduced set was used for all models. Applying LassoCV-derived selection to other models is a known limitation as it can introduce selection bias. Splines were applied to continuous features for Logistic Regression only. Logistic Regression C was tuned via GridSearchCV over [0.001, 0.01, 0.1, 1, 10, 100]. Final hyperparameters: Gradient Boosting `n_estimators = 300`, `learning_rate = 0.1`, `max_depth = 4`; Random Forest `n_estimators = 100`, `max_depth = None`, `min_samples_split = 2`.
 
-### Reproducibility
-
-**Code:** github.com/AidanColvin/machine-learning-midterm-project
-**Language:** Python 3.11 | **Libraries:** scikit-learn 1.4.0,
-pandas 2.1.4, numpy 1.26.2, scipy 1.11.4 | `random_state = 42`
-throughout.
-```bash
-pip install -r requirements.txt
-python3 src/generate_submissions.py
-```
-```python
-# Key preprocessing step
-lasso = LogisticRegressionCV(cv=5, penalty='l1', solver='saga')
-lasso.fit(X_train, y_train)
-selected = X_train.columns[lasso.coef_[0] != 0]  # drops Blood Pressure
-X_train, X_test = X_train[selected], X_test[selected]
-```
 ---
 
 ## 3. Results and Evaluation
@@ -183,4 +166,18 @@ arise in how each model handles hard positive cases, not easy negatives.
 
 ### C. Reproducibility
 
-**Code:** Full pipeline available at github.com/AidanColvin/machine-learning-midterm-project
+**Code:** github.com/AidanColvin/machine-learning-midterm-project
+**Language:** Python 3.11 | **Libraries:** scikit-learn 1.4.0,
+pandas 2.1.4, numpy 1.26.2, scipy 1.11.4 | `random_state = 42`
+throughout.
+```bash
+pip install -r requirements.txt
+python3 src/generate_submissions.py
+```
+```python
+# Key preprocessing step
+lasso = LogisticRegressionCV(cv=5, penalty='l1', solver='saga')
+lasso.fit(X_train, y_train)
+selected = X_train.columns[lasso.coef_[0] != 0]  # drops Blood Pressure
+X_train, X_test = X_train[selected], X_test[selected]
+```
