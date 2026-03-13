@@ -1,6 +1,6 @@
 # Midterm Project Report — Heart Disease Prediction
 
-INTRODUCTION 
+# Introduction 
 
 This project builds a machine learning model to estimate the probability of heart disease from 13 clinical features. Probability estimates from this model may support clinicians in identifying high-risk patients and prioritizing targeted preventive treatment.
 
@@ -9,7 +9,7 @@ This project builds a machine learning model to estimate the probability of hear
   The goal of this project is to accurately estimate the probability of heart disease for unseen test observations. Success is evaluated using the **Area Under the Curve (AUC)**. An AUC of 1.0 represents perfect discrimination between classes; an AUC of 0.5 represents performance equivalent to random guessing.
   Predicting heart disease from routine clinical data has direct implications for patient care. A reliable probability estimate allows clinicians to risk-stratify patients and prioritize preventive intervention for those most at risk. Using synthetic training data further supports this by enabling model development without exposing sensitive patient records. 
 
-METHODOLOGY
+# Methodology
 
 Three models were tested, all evaluated with 5-fold stratified
 cross-validation scored by AUC.
@@ -49,7 +49,7 @@ analysis in the Results section.
   
   Data was preprocessed as follows: the target was encoded (`Presence` = 1, `Absence` = 0); continuous features were z-score standardized with the scaler fit on training data only to prevent leakage; no imputation was needed; outliers (z > 3.0) were retained as potentially valid extreme values. LassoCV (5-fold, L1 penalty) was applied as a standalone feature selection step before any model fitting. Blood Pressure (|r| = 0.005) had its coefficient shrunk to zero and was dropped, leaving 12 features. This reduced set was used for all models. Applying LassoCV-derived selection to other models is a known limitation as it can introduce selection bias. Splines were applied to continuous features for Logistic Regression only. Logistic Regression C was tuned via GridSearchCV over [0.001, 0.01, 0.1, 1, 10, 100]. Final hyperparameters: Gradient Boosting `n_estimators = 300`, `learning_rate = 0.1`, `max_depth = 4`; Random Forest `n_estimators = 100`, `max_depth = None`, `min_samples_split = 2`. Full reproducibility details, including the GitHub repository link and core preprocessing scripts, are provided in Appendix C.
 
-RESULTS AND EVALUATION
+# Results and Evaluation
 
   AUC was used as the primary metric because it measures how well a
 model ranks positive cases above negative cases across all thresholds,
@@ -85,7 +85,8 @@ else is in the model, not just its clinical prominence.
 
   All three models fell within a narrow AUC range (0.9507 to 0.9540), showing the outcome signal is recoverable by multiple methods (Figure 3, Appendix). Gradient Boosting had the highest sensitivity (86.6% vs. 85.7% for Logistic Regression) and was selected as the final submission on that basis. The uniform specificity across models suggests differences arise in how each model handles hard positive cases, not easy negatives.
 
-APPENDIX
+# Appendix
+
 ### A. Supplementary Data Tables
 
 **Table A1: Clinical Feature Descriptions**
