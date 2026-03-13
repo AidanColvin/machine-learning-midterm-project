@@ -126,8 +126,11 @@ arise in how each model handles hard positive cases, not easy negatives.
 
 ## Appendix
 
+## Appendix
 
+### A. Supplementary Data Tables
 
+**Table A1: Clinical Feature Descriptions**
 | Feature | Type | Description |
 |---|---|---|
 | Age | Continuous | Patient age in years |
@@ -144,6 +147,9 @@ arise in how each model handles hard positive cases, not easy negatives.
 | Number of Vessels (Fluoroscopy) | Ordinal | Number of major coronary vessels visible under contrast dye (0–3) |
 | Thallium Stress Test | Ordinal | 3 = Normal, 6 = Fixed Defect, 7 = Reversible Defect |
 
+<br>
+
+**Table A2: Bivariate Feature-Outcome Correlations**
 | Rank | Feature | \|r\| | Direction |
 |---|---|---|---|
 | 1 | Thallium Stress Test | 0.606 | Positive |
@@ -158,10 +164,35 @@ arise in how each model handles hard positive cases, not easy negatives.
 | 10 | Age | 0.212 | Positive |
 | 11 | Cholesterol | 0.083 | Positive |
 | 12 | Fasting Blood Sugar | 0.034 | Positive |
-| 13 | Blood Pressure | 0.005 | Positive 
+| 13 | Blood Pressure | 0.005 | Positive |
 
+---
 
+### B. Model Interpretability Visualizations
 
+![Feature Importance]([INSERT_YOUR_FEATURE_IMPORTANCE_FILE_NAME.png])
+**Figure 1:** Gradient Boosting feature importances (Gini importance). Thallium Stress Test and Chest Pain Type had the highest impurity-based importances in the model. These values reflect relative split frequency and should not be interpreted as proportional causal contributions.
+
+![Decision Tree]([INSERT_YOUR_DECISION_TREE_FILE_NAME.png])
+**Figure 2:** Decision tree (depth=4, 6 features) illustrating the primary decision logic learned by tree-based models. This provides an interpretable reference for the tree structure before ensembling.
+
+---
+
+### C. Model Performance Visualizations
+
+![ROC Curves]([INSERT_YOUR_ROC_CURVE_FILE_NAME.png])
+**Figure 3:** ROC curves for Gradient Boosting (AUC = 0.9540), Random Forest (AUC = 0.9528), and Logistic Regression (AUC = 0.9507). The right panel zooms into the 0–0.25 False Positive Rate range where model separation is most visible.
+
+![Cross Validation AUC]([INSERT_YOUR_AUC_COMPARISON_FILE_NAME.png])
+**Figure 4:** 5-Fold Cross-Validation AUC Comparison. Error bars indicate variance across the five folds, demonstrating high stability across all models.
+
+![Confusion Matrices]([INSERT_YOUR_CONFUSION_MATRICES_FILE_NAME.png])
+**Figure 5:** Confusion matrices shown as a percentage of the actual class. Values reflect performance at the default 0.5 classification threshold.
+
+---
+
+### D. Reproducibility
+**Code:** Full pipeline available at github.com/AidanColvin/machine-learning-midterm-project
 **Figure 1:** Gradient Boosting feature importances (mean decrease in impurity), normalized to sum to 1.0. Thallium Stress Test and Chest Pain Type had the highest impurity-based importances in the model. These values reflect relative split frequency and should not be interpreted as proportional causal contributions.
 
 **Figure 2:** ROC curves for Gradient Boosting (AUC = 0.9540), Random Forest (AUC = 0.9528), and Logistic Regression (AUC = 0.9507) overlaid on a single plot with the random-chance diagonal shown for reference.
