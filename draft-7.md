@@ -115,7 +115,7 @@ X_train, X_test = X_train[selected], X_test[selected]
 
 ## 3. Results and Evaluation
 
-AUC-ROC was used as the primary metric because it measures how well a
+AUC was used as the primary metric because it measures how well a
 model ranks positive cases above negative cases across all thresholds,
 rather than performance at a single cutoff. Sensitivity and specificity
 are reported at the default 0.5 threshold on held-out CV predictions.
