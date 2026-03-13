@@ -1,4 +1,5 @@
 # Midterm Project Report — Heart Disease Prediction
+Generative AI was used strictly for basic spelling and grammar correction, while all code, results, phrasing, and structural organization are my own original work.
 
 ### Introduction 
 
